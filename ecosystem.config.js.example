@@ -1,0 +1,54 @@
+/**
+ * PM2 ecosystem configuration example
+ *
+ * Usage:
+ * 1. Copy this file to ecosystem.config.js
+ * 2. Create corresponding .env files (.env.production, .env.staging, etc.)
+ * 3. Run: pm2 start ecosystem.config.js
+ *
+ * Config files naming:
+ *   - args: 'production' → loads .env.production
+ *   - args: 'staging'    → loads .env.staging
+ *   - args: 'db1'        → loads .env.db1
+ *
+ * Commands:
+ *   pm2 start ecosystem.config.js  - Start all proxies
+ *   pm2 logs                        - View all logs
+ *   pm2 list                        - List running processes
+ *   pm2 restart all                 - Restart all proxies
+ *   pm2 stop all                    - Stop all proxies
+ *   pm2 delete all                  - Remove all proxies
+ */
+
+module.exports = {
+  apps: [
+    {
+      name: 'ydb-proxy-prod',
+      script: 'proxy.js',
+      args: 'production',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '200M'
+    },
+    {
+      name: 'ydb-proxy-stage',
+      script: 'proxy.js',
+      args: 'staging',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '200M'
+    },
+    {
+      name: 'ydb-proxy-dev',
+      script: 'proxy.js',
+      args: 'development',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '200M'
+    }
+    // Add more proxy configurations here
+  ]
+};

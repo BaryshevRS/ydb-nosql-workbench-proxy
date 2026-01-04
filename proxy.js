@@ -1,4 +1,9 @@
-require("dotenv").config();
+const path = require("path");
+
+// Load config from CLI argument or default .env
+const configName = process.argv[2];
+const configPath = configName ? `.env.${configName}` : '.env';
+require("dotenv").config({ path: configPath });
 
 const express = require("express");
 const aws4 = require("aws4");
@@ -17,7 +22,9 @@ const AWS_REGION = process.env.AWS_REGION || "ru-central1";
 const PORT = Number(process.env.PORT || 8000);
 
 if (!YDB_ENDPOINT || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
-    throw new Error("Set env: YDB_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY");
+    console.error(`\nError: Missing required environment variables in ${configPath}`);
+    console.error("Required: YDB_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY\n");
+    process.exit(1);
 }
 
 const targetBase = new URL(YDB_ENDPOINT);
@@ -185,6 +192,7 @@ app.listen(PORT, () => {
     console.log("\n" + "=".repeat(50));
     console.log("YDB PROXY SERVER");
     console.log("=".repeat(50));
+    console.log(`Config:      ${path.basename(configPath)}`);
     console.log(`Listening:   http://127.0.0.1:${PORT}`);
     console.log(`Target:      ${YDB_ENDPOINT}`);
     console.log(`Region:      ${AWS_REGION}`);

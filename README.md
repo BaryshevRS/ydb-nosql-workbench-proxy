@@ -53,6 +53,76 @@ AWS Region: ru-central1
 
 That's it! Now you can work with your YDB tables through NoSQL Workbench.
 
+## Running Multiple Proxies
+
+You can run multiple proxy servers for different YDB databases simultaneously.
+
+### Method 1: Manual (Simple)
+
+Create multiple config files:
+```
+.env
+.env.production
+.env.staging
+.env.development
+```
+
+Run each proxy in a separate terminal:
+```bash
+# Terminal 1
+node proxy.js production    # Uses .env.production, Port 8000
+
+# Terminal 2
+node proxy.js staging       # Uses .env.staging, Port 8001
+
+# Terminal 3
+node proxy.js development   # Uses .env.development, Port 8002
+```
+
+> **Note:** Config name is automatically prefixed with `.env.`
+> - `node proxy.js production` → loads `.env.production`
+> - `node proxy.js db1` → loads `.env.db1`
+> - `node proxy.js` → loads `.env` (default)
+
+### Method 2: PM2 (Advanced)
+
+Install PM2:
+```bash
+npm install -g pm2
+```
+
+Create `ecosystem.config.js`:
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'ydb-proxy-prod',
+      script: 'proxy.js',
+      args: 'production'
+    },
+    {
+      name: 'ydb-proxy-stage',
+      script: 'proxy.js',
+      args: 'staging'
+    },
+    {
+      name: 'ydb-proxy-test',
+      script: 'proxy.js',
+      args: 'testing'
+    }
+  ]
+};
+```
+
+Manage all proxies:
+```bash
+pm2 start ecosystem.config.js    # Start all
+pm2 logs                          # View logs
+pm2 list                          # List all processes
+pm2 restart all                   # Restart all
+pm2 stop all                      # Stop all
+```
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |
