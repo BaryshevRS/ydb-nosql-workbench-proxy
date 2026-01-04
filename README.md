@@ -1,164 +1,168 @@
 # YDB NoSQL Workbench Proxy
 
-A proxy server that enables AWS NoSQL Workbench and other DynamoDB-compatible tools to work with Yandex Database (YDB) by signing requests with AWS Signature Version 4.
+Local proxy server for connecting AWS NoSQL Workbench to Yandex Database (YDB) via DynamoDB-compatible Document API.
 
-## Overview
+## What is this?
 
-This proxy server acts as a bridge between DynamoDB-compatible clients (like AWS NoSQL Workbench) and YDB's Document API. It intercepts incoming requests, signs them with AWS4 authentication, and forwards them to your YDB endpoint.
+AWS NoSQL Workbench is a great tool for working with DynamoDB tables. This proxy allows you to use it with YDB by:
+- Running locally on your machine (localhost)
+- Signing all requests with AWS Signature V4
+- Forwarding requests to YDB Document API endpoint
+- Proxying responses back to NoSQL Workbench
 
-## Features
+## Quick Start
 
-- AWS Signature Version 4 (SigV4) authentication for YDB Document API
-- Full request/response logging with unique request IDs
-- Body preservation for accurate signature calculation
-- Configurable via environment variables
-- Support for all DynamoDB API operations
-
-## Prerequisites
-
-- Node.js (v14 or higher)
-- YDB database with Document API enabled
-- AWS-compatible credentials for YDB
-
-## Installation
-
-1. Clone this repository:
-```bash
-git clone <repository-url>
-cd ydb-nosql-workbench-proxy
-```
-
-2. Install dependencies:
+1. **Install dependencies**
 ```bash
 npm install
 ```
 
-3. Create a `.env` file in the project root:
+2. **Create `.env` file** with your YDB credentials
 ```env
-YDB_ENDPOINT=https://docapi.serverless.yandexcloud.net/ru-central1/b1g...
-AWS_ACCESS_KEY_ID=your_access_key_id
-AWS_SECRET_ACCESS_KEY=your_secret_access_key
+YDB_ENDPOINT=https://docapi.serverless.yandexcloud.net/ru-central1/b1gxxxxxx/etnxxxxxx
+AWS_ACCESS_KEY_ID=YCAJExxxxxxxxxxxxxx
+AWS_SECRET_ACCESS_KEY=YCOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 AWS_REGION=ru-central1
 PORT=8000
 ```
 
-## Configuration
-
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `YDB_ENDPOINT` | Yes | - | Full YDB Document API endpoint URL |
-| `AWS_ACCESS_KEY_ID` | Yes | - | YDB static access key ID |
-| `AWS_SECRET_ACCESS_KEY` | Yes | - | YDB static secret access key |
-| `AWS_REGION` | No | `ru-central1` | AWS region for signing |
-| `PORT` | No | `8000` | Port for the proxy server |
-
-## Usage
-
-### Starting the Server
-
+3. **Start proxy**
 ```bash
 node proxy.js
 ```
 
-The server will start and display:
+You should see:
 ```
 ========== YDB PROXY SERVER STARTED ==========
 Server listening on: http://127.0.0.1:8000
 Target endpoint: https://docapi.serverless...
 AWS Region: ru-central1
-AWS Access Key ID: YCAJE...
-Debug logging: ENABLED
 ==============================================
 ```
 
-### Using with AWS NoSQL Workbench
+4. **Configure NoSQL Workbench**
+   - Open AWS NoSQL Workbench
+   - Go to "Operation builder" → Add connection
+   - Select "DynamoDB local"
+   - Set connection settings:
+     - **Endpoint**: `http://localhost:8000`
+     - **Region**: `ru-central1` (or your region)
+     - **Access Key ID**: Your `AWS_ACCESS_KEY_ID`
+     - **Secret Access Key**: Your `AWS_SECRET_ACCESS_KEY`
+   - Click "Connect"
 
-1. Start the proxy server
-2. Open AWS NoSQL Workbench
-3. Configure a new DynamoDB connection:
-   - **Endpoint**: `http://127.0.0.1:8000`
-   - **Region**: Match your `AWS_REGION` setting (default: `ru-central1`)
-   - **Access Key ID**: Your YDB access key
-   - **Secret Access Key**: Your YDB secret key
-4. Connect and start working with your YDB tables
+That's it! Now you can work with your YDB tables through NoSQL Workbench.
 
-### Using with AWS SDK
+## Environment Variables
 
-Configure the AWS SDK to point to the proxy:
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `YDB_ENDPOINT` | ✅ Yes | - | Full YDB Document API endpoint URL from Yandex Cloud console |
+| `AWS_ACCESS_KEY_ID` | ✅ Yes | - | Static access key ID (create in Yandex Cloud IAM) |
+| `AWS_SECRET_ACCESS_KEY` | ✅ Yes | - | Static secret access key |
+| `AWS_REGION` | No | `ru-central1` | Yandex Cloud region |
+| `PORT` | No | `8000` | Local proxy port |
+
+## Getting YDB Credentials
+
+1. Go to [Yandex Cloud Console](https://console.cloud.yandex.ru/)
+2. Navigate to your YDB database
+3. Copy the **Document API endpoint** (starts with `https://docapi.serverless...`)
+4. Create **Static Access Key** in IAM section
+5. Copy Access Key ID and Secret Key
+6. Paste them into `.env` file
+
+## How It Works
+
+```
+NoSQL Workbench → localhost:8000 → [Proxy signs request] → YDB Document API
+                                                                    ↓
+NoSQL Workbench ← localhost:8000 ← [Proxy forwards response] ← YDB Document API
+```
+
+The proxy:
+1. Receives DynamoDB API request from NoSQL Workbench
+2. Preserves request body and necessary headers
+3. Signs request with AWS Signature Version 4
+4. Forwards to your YDB endpoint
+5. Returns YDB response back to NoSQL Workbench
+
+## Troubleshooting
+
+### NoSQL Workbench can't connect
+- Check that proxy is running (`node proxy.js`)
+- Verify port 8000 is not used by another application
+- Use `http://localhost:8000` (not https)
+
+### Authentication error
+- Double-check `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `.env`
+- Verify credentials have permissions for your YDB database
+- Make sure static key is active in Yandex Cloud IAM
+
+### Tables not showing
+- Verify `YDB_ENDPOINT` includes full path with database ID
+- Check region matches between proxy and NoSQL Workbench settings
+- Look at proxy console logs for detailed error messages
+
+### Signature mismatch
+- Ensure you're using the same credentials in `.env` and NoSQL Workbench
+- Check system time is synchronized
+- Verify `YDB_ENDPOINT` format is correct
+
+## Debug Logging
+
+The proxy logs every request with details:
+- Request ID for tracking
+- HTTP method and URL
+- Request/response headers
+- Body content (for small requests)
+- Signing process details
+- Error stack traces
+
+Check console output to debug connection issues.
+
+## Using with AWS SDK
+
+You can also use this proxy with AWS SDK for Node.js:
 
 ```javascript
 const AWS = require('aws-sdk');
 
 const dynamodb = new AWS.DynamoDB({
-  endpoint: 'http://127.0.0.1:8000',
+  endpoint: 'http://localhost:8000',
   region: 'ru-central1',
-  accessKeyId: 'your_access_key_id',
-  secretAccessKey: 'your_secret_access_key'
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
+
+// Now use dynamodb client as usual
+dynamodb.listTables({}, (err, data) => {
+  if (err) console.error(err);
+  else console.log(data);
 });
 ```
 
-## How It Works
+## Security
 
-1. **Request Reception**: The proxy receives DynamoDB API requests from the client
-2. **Header Filtering**: Filters and preserves necessary headers (Content-Type, x-amz-target, etc.)
-3. **URL Construction**: Combines the YDB endpoint with the request path
-4. **AWS4 Signing**: Signs the request using AWS Signature Version 4
-5. **Request Forwarding**: Sends the signed request to YDB
-6. **Response Proxying**: Returns the YDB response to the client
-
-## Logging
-
-The proxy provides detailed logging for each request:
-
-- Unique request ID for tracking
-- Request method, URL, and headers
-- Request and response body (for small payloads < 1KB)
-- AWS signing details
-- Upstream response status and headers
-- Error details with stack traces
-
-## Troubleshooting
-
-### Connection refused
-- Ensure the proxy server is running
-- Check that the PORT is not already in use
-- Verify firewall settings
-
-### Authentication errors
-- Verify your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are correct
-- Check that the credentials have proper permissions in YDB
-- Ensure the `AWS_REGION` matches your YDB region
-
-### Signature mismatch
-- Check that the YDB_ENDPOINT is correct
-- Verify that no middleware is modifying the request body
-- Check the request timestamp (system clock sync)
-
-## Security Notes
-
-- Never commit your `.env` file to version control
-- Use environment-specific credentials
-- Consider adding rate limiting for production use
-- Run behind a reverse proxy (nginx, Apache) in production
-- Use HTTPS in production environments
+⚠️ **Important:**
+- Never commit `.env` file to git (already in `.gitignore`)
+- Use this proxy only for local development
+- Don't expose proxy port to the internet
+- For production, use YDB SDK directly
 
 ## Dependencies
 
-- **express** (v5.2.1): Web framework
-- **aws4** (v1.13.2): AWS Signature Version 4 signing
-- **dotenv** (v17.2.3): Environment variable management
-- **node-fetch** (v3.3.2): HTTP client for upstream requests
+- **express** - Web server framework
+- **aws4** - AWS Signature V4 signing
+- **dotenv** - Environment variables loader
+- **node-fetch** - HTTP client
+
+## Requirements
+
+- Node.js 18 or higher
+- YDB database with Document API enabled
+- AWS NoSQL Workbench (download from AWS website)
 
 ## License
 
 Private project
-
-## Contributing
-
-This is a private project. Contributions are not currently accepted.
-
-## Support
-
-For YDB-specific issues, refer to the [Yandex Cloud YDB documentation](https://cloud.yandex.com/docs/ydb/).
