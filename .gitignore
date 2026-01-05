@@ -140,4 +140,4 @@ vite.config.ts.timestamp-*
 
 .idea
 claude
-.env
+ecosystem.config.js

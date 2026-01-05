@@ -6,7 +6,6 @@ Local proxy server for connecting AWS NoSQL Workbench to Yandex Database (YDB) v
 
 AWS NoSQL Workbench is a great tool for working with DynamoDB tables. This proxy allows you to use it with YDB by:
 - Running locally on your machine (localhost)
-- Signing all requests with AWS Signature V4
 - Forwarding requests to YDB Document API endpoint
 - Proxying responses back to NoSQL Workbench
 
@@ -47,10 +46,8 @@ AWS Region: ru-central1
    - Go to "Operation builder" → Add connection
    - Select "DynamoDB local"
    - Set connection settings:
-     - **Endpoint**: `http://localhost:8000`
-     - **Region**: `ru-central1` (or your region)
-     - **Access Key ID**: Your `AWS_ACCESS_KEY_ID`
-     - **Secret Access Key**: Your `AWS_SECRET_ACCESS_KEY`
+     - **Hostname**: `localhost`
+     - **Port**: `8000`
    - Click "Connect"
 
 That's it! Now you can work with your YDB tables through NoSQL Workbench.
@@ -95,10 +92,7 @@ node proxy.js development
 
 ### Method 2: PM2 (Advanced)
 
-Install PM2:
-```bash
-npm install -g pm2
-```
+PM2 is already included in devDependencies and will be installed with `npm install`.
 
 Create `ecosystem.config.js`:
 ```javascript
@@ -200,58 +194,17 @@ The proxy:
 
 ## Debug Logging
 
-The proxy logs every request with details:
-- Request ID for tracking
-- HTTP method and URL
-- Request/response headers
-- Body content (for small requests)
-- Signing process details
-- Error stack traces
-
+The proxy logs every request to console:
+- **Request ID** - Unique identifier for tracking each request
+- **HTTP method and URL** - e.g., `POST /` or `GET /TableName`
+- **Response status** - Status code and message from YDB (e.g., `→ 200 OK`)
+- **Errors** - Error message and full stack trace on failures
+ 
 Check console output to debug connection issues.
-
-## Using with AWS SDK
-
-You can also use this proxy with AWS SDK for Node.js:
-
-```javascript
-const AWS = require('aws-sdk');
-
-const dynamodb = new AWS.DynamoDB({
-  endpoint: 'http://localhost:8000',
-  region: 'ru-central1',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-// Now use dynamodb client as usual
-dynamodb.listTables({}, (err, data) => {
-  if (err) console.error(err);
-  else console.log(data);
-});
-```
-
-## Security
-
-⚠️ **Important:**
-- Never commit `.env` file to git (already in `.gitignore`)
-- Use this proxy only for local development
-- Don't expose proxy port to the internet
-- For production, use YDB SDK directly
-
-## Dependencies
-
-- **express** - Web server framework
-- **aws4** - AWS Signature V4 signing
-- **dotenv** - Environment variables loader
-- **node-fetch** - HTTP client
-
+ 
 ## Requirements
 
 - Node.js 18 or higher
 - YDB database with Document API enabled
 - AWS NoSQL Workbench (download from AWS website)
-
-## License
-
-Private project
+ 
