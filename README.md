@@ -28,6 +28,8 @@ PORT=8000
 
 3. **Start proxy**
 ```bash
+npm start
+# or
 node proxy.js
 ```
 
@@ -70,13 +72,20 @@ Create multiple config files:
 Run each proxy in a separate terminal:
 ```bash
 # Terminal 1
-node proxy.js production    # Uses .env.production, Port 8000
+npm run prod               # Uses .env.production, Port 8000
 
 # Terminal 2
-node proxy.js staging       # Uses .env.staging, Port 8001
+npm run stage              # Uses .env.staging, Port 8001
 
 # Terminal 3
-node proxy.js development   # Uses .env.development, Port 8002
+npm run dev                # Uses .env.development, Port 8002
+```
+
+Or use node directly:
+```bash
+node proxy.js production
+node proxy.js staging
+node proxy.js development
 ```
 
 > **Note:** Config name is automatically prefixed with `.env.`
@@ -114,13 +123,23 @@ module.exports = {
 };
 ```
 
-Manage all proxies:
+Manage all proxies with npm scripts:
 ```bash
-pm2 start ecosystem.config.js    # Start all
-pm2 logs                          # View logs
-pm2 list                          # List all processes
-pm2 restart all                   # Restart all
-pm2 stop all                      # Stop all
+npm run pm2:start      # Start all proxies
+npm run pm2:logs       # View logs
+npm run pm2:monit      # Monitor CPU/RAM
+npm run pm2:restart    # Restart all
+npm run pm2:stop       # Stop all
+npm run pm2:delete     # Remove all
+```
+
+Or use PM2 directly:
+```bash
+pm2 start ecosystem.config.js
+pm2 logs
+pm2 list
+pm2 restart all
+pm2 stop all
 ```
 
 ## Environment Variables

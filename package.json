@@ -1,15 +1,45 @@
 {
   "name": "ydb-nosql-workbench-proxy",
   "version": "1.0.0",
-  "description": "",
+  "description": "Local proxy server for connecting AWS NoSQL Workbench to Yandex Database (YDB) via DynamoDB-compatible Document API",
   "main": "proxy.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "private": true,
+  "scripts": {
+    "start": "node proxy.js",
+    "dev": "node proxy.js development",
+    "prod": "node proxy.js production",
+    "stage": "node proxy.js staging",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop all",
+    "pm2:restart": "pm2 restart all",
+    "pm2:logs": "pm2 logs",
+    "pm2:monit": "pm2 monit",
+    "pm2:delete": "pm2 delete all"
+  },
+  "keywords": [
+    "ydb",
+    "yandex-database",
+    "dynamodb",
+    "nosql-workbench",
+    "proxy",
+    "document-api",
+    "yandex-cloud"
+  ],
+  "author": "Ruslan Baryshev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BaryshevRS/ydb-nosql-workbench-proxy"
+  },
+  "bugs": {
+    "url": "https://github.com/BaryshevRS/ydb-nosql-workbench-proxy/issues"
+  },
   "dependencies": {
     "aws4": "^1.13.2",
     "dotenv": "^17.2.3",
     "express": "^5.2.1"
-  }
+  },
+  "private": true
 }
